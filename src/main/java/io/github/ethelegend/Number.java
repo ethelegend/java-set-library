@@ -1,4 +1,5 @@
 package io.github.ethelegend;
+// github jank
 public class Number {
     double x;
     double i;
