@@ -10,7 +10,7 @@ Current supported functions:
 - Subtraction
 - Multiplication
 - Division
--
+
 To-Do:
 - Inverse
 - Dot product
