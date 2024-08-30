@@ -1,81 +1,169 @@
 package io.github.ethelegend;
-// github jank
 public class Number {
-    double x;
-    double i;
-    double j;
-    double k;
+    // Real constants
+    final double a;
+    final double b;
+    final double c;
+    final double d;
+    final double modulus;
+    final double squaredModulus;
+    final double argument;
+
+    // (probably) Non-real constants
+    public Number vector() {
+        return new Number(0,this.b,this.c,this.d);
+    }
+    public Number unitVector() {
+        Number result = this.vector();
+        return result.divide(result.modulus);
+    }
+    public Number conjugate() {
+        return new Number(
+                this.a,
+                -this.b,
+                -this.c,
+                -this.d
+        );
+    }
+    public Number reciprocal() {
+        return this.conjugate().divide(this.squaredModulus);
+    }
+
+    // Constructors
     public Number(double a, double b, double c, double d) {
-        this.x = a;
-        this.i = b;
-        this.j = c;
-        this.k = d;
+        this.a = a;
+        this.b = b;
+        this.c = c;
+        this.d = d;
+        this.squaredModulus = a*a + b*b + c*c + d*d;
+        this.modulus = Math.sqrt(this.squaredModulus);
+        this.argument = Math.acos(a/this.modulus);
     }
     public Number(double a, double b) {
-        this.x = a;
-        this.i = b;
+        this(a,b,0,0);
     }
     public Number(double a) {
-        this.x = a;
+        this(a,0,0,0);
     }
+
+    // Overriden functions
     public String toString() {
         String number = "";
-        if (this.x != 0) {
-            number += this.x;
-        } if (this.i != 0) {
-            number += ((this.i > 0) ? " + " : " - ") + Math.abs(this.i) + "i";
-        } if (this.j != 0) {
-            number += ((this.j > 0) ? " + " : " - ") + Math.abs(this.j) + "j";
-        } if (this.k != 0) {
-            number += ((this.k > 0) ? " + " : " - ") + Math.abs(this.k) + "k";
+        if (this.a != 0) {
+            number += this.a;
+        } if (this.b != 0) {
+            if (!number.isEmpty()) {
+                number += ((this.b > 0) ? " + " : " - ");
+            }
+            number += Math.abs(this.b) + "i";
+        } if (this.c != 0) {
+            if (!number.isEmpty()) {
+                number += ((this.c > 0) ? " + " : " - ");
+            }
+            number += Math.abs(this.c) + "j";
+        } if (this.d != 0) {
+            if (!number.isEmpty()) {
+                number += ((this.d > 0) ? " + " : " - ");
+            }
+            number += Math.abs(this.d) + "k";
         }
         return (number.isEmpty()) ? "0" : number;
     }
-    public double modulus(boolean squared) {
-        double result = this.x*this.x + this.i*this.i + this.j*this.j + this.k*this.k;
-        return (squared) ? result : Math.sqrt(result);
+
+    // Basic operations
+    public Number add(double addend) {
+        return new Number(
+                this.a + addend,
+                this.b,
+                this.c,
+                this.d
+        );
+    }
+    public Number add(Number addend) {
+        return new Number(
+                this.a + addend.a,
+                this.b + addend.b,
+                this.c + addend.c,
+                this.d + addend.d
+        );
+    }
+    public Number subtract(double subtrahend) {
+        return new Number(
+                this.a - subtrahend,
+                this.b,
+                this.c,
+                this.d
+        );
+    }
+    public Number subtract(Number subtrahend) {
+        return new Number(
+                this.a - subtrahend.a,
+                this.b - subtrahend.b,
+                this.c - subtrahend.c,
+                this.d - subtrahend.d
+        );
+    }
+    public Number multiply(double factor) {
+        return new Number(
+                this.a * factor,
+                this.b * factor,
+                this.c * factor,
+                this.d * factor
+        );
+    }
+    public Number multiply(Number factor) {
+        return new Number(
+                this.a * factor.a - this.b * factor.b - this.c * factor.c - this.d * factor.d,
+                this.a * factor.b + this.b * factor.a + this.c * factor.d - this.d * factor.c,
+                this.a * factor.c - this.b * factor.d + this.c * factor.a + this.d * factor.b,
+                this.a * factor.d + this.b * factor.c - this.c * factor.b + this.d * factor.a
+
+        );
+    }
+    public Number divide(double divisor) {
+        return new Number(
+                this.a / divisor,
+                this.b / divisor,
+                this.c / divisor,
+                this.d / divisor
+        );
+    }
+    public Number divide(Number divisor) {
+        return this.multiply(divisor.conjugate()).divide(divisor.squaredModulus);
     }
 
-    public Number conjugate() {
-        return new Number(
-                this.x,
-                -this.i,
-                -this.j,
-                -this.k
-        );
+    // Exponential operations
+    public Number exp() {
+        double vectorModulus = this.vector().modulus;
+        return this.unitVector().multiply(Math.sin(vectorModulus)).add(Math.cos(vectorModulus)).multiply(Math.exp(this.a));
     }
-    public Number add(Number number) {
-        return new Number(
-                this.x + number.x,
-                this.i + number.i,
-                this.j + number.j,
-                this.k + number.k
-        );
+    public Number exp(double base) {
+        return this.multiply(Math.log(base)).exp();
     }
-    public Number subtract(Number number) {
-        return new Number(
-                this.x - number.x,
-                this.i - number.i,
-                this.j - number.j,
-                this.k - number.k
-        );
+    public Number exp(Number base) {
+        return base.log().multiply(this).exp();
     }
-    public Number multiply(Number number) {
-        return new Number(
-                this.x*number.x - this.i*number.i - this.j*number.j - this.k*number.k,
-                this.x*number.i + this.i*number.x + this.j*number.k - this.k*number.j,
-                this.x*number.j - this.i*number.k + this.j*number.x + this.k*number.i,
-                this.x*number.k + this.i*number.j - this.j*number.i + this.k*number.x
-
-        );
+    public Number log() {
+        return this.unitVector().multiply(this.argument).add(Math.log(this.modulus));
     }
-    public Number divide(Number number) {
-        Number result = this.multiply(number.conjugate());
-        result.x /= number.modulus(true);
-        result.i /= number.modulus(true);
-        result.j /= number.modulus(true);
-        result.k /= number.modulus(true);
-        return result;
+    public Number log(double base) {
+        return this.log().divide(Math.log(base));
+    }
+    public Number log(Number base) {
+        return this.log().divide(base.log());
+    }
+    public Number pow(double index) {
+        double angle = index*this.argument;
+        return this.unitVector().multiply(Math.sin(angle)).add(Math.cos(angle)).multiply(Math.pow(this.modulus,index));
+    }
+    public Number pow(Number index) {
+        return index.exp(this);
+    }
+    public Number root(double index) {
+        return this.pow(1/index);
+    }
+    public Number root(Number index) {
+        return this.pow(index.reciprocal());
     }
 }
 
